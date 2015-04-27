@@ -8,7 +8,7 @@
           {{#if laneStyleRect}}
             <rect {{bind-attr x=lane.x y=lane.y width=width height=lane.height }}></rect>
           {{else}}
-            <line {{bind-attr x=lane.x y=lane.y}}></line>
+            <line {{bind-attr x1="0" x2=width y1=lane.y y2=lane.y}}></line>
           {{/if}}
         {{/each}}
       </g>
