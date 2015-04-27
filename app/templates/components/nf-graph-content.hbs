@@ -5,7 +5,11 @@
     {{#if graph.showLanes}}
       <g class="nf-grid-lanes">
         {{#each lane in gridLanes}}
-          <rect {{bind-attr x=lane.x y=lane.y width=width height=lane.height }}></rect>
+          {{#if laneStyleRect}}
+            <rect {{bind-attr x=lane.x y=lane.y width=width height=lane.height }}></rect>
+          {{else}}
+            <line {{bind-attr x=lane.x y=lane.y}}></line>
+          {{/if}}
         {{/each}}
       </g>
     {{/if}}

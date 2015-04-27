@@ -383,6 +383,17 @@ export default Ember.Component.extend({
   showLanes: false,
 
   /**
+    Determines what style the lanes should be in. Possible values:
+    'line', 'rect'.
+    @property showLanes
+    @type string
+    @default rect
+  */
+
+  laneStyle: 'rect',
+  laneStyleRect: Ember.computed.equal('laneStyle', 'rect'),
+
+  /**
     Determines whether to display "frets" in the background of
     the graph.
     @property showFrets
