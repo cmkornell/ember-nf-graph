@@ -1,7 +1,13 @@
 import Ember from 'ember';
 import GraphPosition from 'ember-nf-graph/utils/nf/graph-position';
-import { getMousePoint } from 'ember-nf-graph/utils/nf/svg-dom';
-import { toArray } from 'ember-nf-graph/utils/nf/array-helpers';
+import {
+  getMousePoint
+}
+from 'ember-nf-graph/utils/nf/svg-dom';
+import {
+  toArray
+}
+from 'ember-nf-graph/utils/nf/array-helpers';
 
 var Observable = Rx.Observable;
 
@@ -11,35 +17,25 @@ var scaleFactoryProperty = function(axis) {
   var scaleTypeKey = axis + 'ScaleType';
   var powExponentKey = axis + 'PowerExponent';
 
-  return Ember.computed(scaleTypeKey, powExponentKey, function(){
+  return Ember.computed(scaleTypeKey, powExponentKey, function() {
     var type = this.get(scaleTypeKey);
     var powExp = this.get(powExponentKey);
 
     type = typeof type === 'string' ? type.toLowerCase() : '';
 
-    if(type === 'linear') {
+    if (type === 'linear') {
       return d3.scale.linear;
-    }
-
-    else if(type === 'ordinal') {
+    } else if (type === 'ordinal') {
       return d3.scale.ordinal;
-    }
-
-    else if(type === 'power' || type === 'pow') {
-      return function(){
+    } else if (type === 'power' || type === 'pow') {
+      return function() {
         return d3.scale.pow().exponent(powExp);
       };
-    }
-
-    else if(type === 'log') {
+    } else if (type === 'log') {
       return d3.scale.log;
-    }
-
-    else if(type === 'time') {
+    } else if (type === 'time') {
       return d3.time.scale;
-    }
-
-    else {
+    } else {
       Ember.warn('unknown scale type: ' + type);
       return d3.scale.linear;
     }
@@ -53,7 +49,7 @@ var domainProperty = function(axis) {
   var scaleTypeKey = axis + 'ScaleType';
   var logMinKey = axis + 'LogMin';
 
-  return Ember.computed(dataKey + '.@each', minKey, maxKey, scaleTypeKey, logMinKey, function(){
+  return Ember.computed(dataKey + '.@each', minKey, maxKey, scaleTypeKey, logMinKey, function() {
     var data = this.get(dataKey);
     var min = this.get(minKey);
     var max = this.get(maxKey);
@@ -61,12 +57,12 @@ var domainProperty = function(axis) {
     var logMin = this.get(logMinKey);
     var domain = null;
 
-    if(scaleType === 'ordinal') {
+    if (scaleType === 'ordinal') {
       domain = data;
     } else {
       var extent = [min, max];
 
-      if(scaleType === 'log') {
+      if (scaleType === 'log') {
         if (extent[0] <= 0) {
           extent[0] = logMin;
         }
@@ -97,7 +93,7 @@ var scaleProperty = function(axis) {
     ordinalPaddingKey,
     domainKey,
     ordinalOuterPaddingKey,
-    function(){
+    function() {
       var scaleFactory = this.get(scaleFactoryKey);
       var range = this.get(rangeKey);
       var domain = this.get(domainKey);
@@ -107,7 +103,7 @@ var scaleProperty = function(axis) {
 
       var scale = scaleFactory();
 
-      if(scaleType === 'ordinal') {
+      if (scaleType === 'ordinal') {
         scale = scale.domain(domain).rangeBands(range, ordinalPadding, ordinalOuterPadding);
       } else {
         scale = scale.domain(domain).range(range).clamp(true);
@@ -118,7 +114,7 @@ var scaleProperty = function(axis) {
   );
 };
 
-var minProperty = function(axis, defaultTickCount){
+var minProperty = function(axis, defaultTickCount) {
   var _DataExtent_ = axis + 'DataExtent';
   var _MinMode_ = axis + 'MinMode';
   var _Axis_tickCount_ = axis + 'Axis.tickCount';
@@ -135,32 +131,40 @@ var minProperty = function(axis, defaultTickCount){
       var mode = this.get(_MinMode_);
       var ext;
 
-      if(arguments.length > 1) {
+      if (arguments.length > 1) {
         this[__Min_] = value;
       } else {
         var change = function(val) {
           this.set(_prop_, val);
         }.bind(this);
 
-        if(mode === 'auto') {
+        if (mode === 'auto') {
           change(this.get(_DataExtent_)[0] || 0);
         }
-
-        else if(mode === 'push') {
+        else if (mode === 'push') {
           ext = this.get(_DataExtent_)[0];
-          if(!isNaN(ext) && ext < this[__Min_]) {
+          if (!isNaN(ext) && ext < this[__Min_]) {
             change(ext);
           }
         }
-
-        else if(mode === 'push-tick') {
+        else if (mode === 'push-tick') {
           var extent = this.get(_DataExtent_);
           ext = extent[0];
 
-          if(!isNaN(ext) && ext < this[__Min_]) {
+          if (!isNaN(ext) && ext < this[__Min_]) {
             var tickCount = this.get(_Axis_tickCount_) || defaultTickCount;
             var newDomain = this.get(_ScaleFactory_)().domain(extent).nice(tickCount).domain();
             change(newDomain[0]);
+          }
+        }
+        else if (mode === 'always-push-tick') {
+          var extent = this.get(_DataExtent_);
+          ext = extent[1] || 1;
+
+          if (!isNaN(ext)) {
+            var tickCount = this.get(_Axis_tickCount_) || defaultTickCount;
+            var newDomain = this.get(_ScaleFactory_)().domain(extent).nice(tickCount).domain();
+            change(newDomain[1]);
           }
         }
       }
@@ -187,29 +191,37 @@ var maxProperty = function(axis, defaultTickCount) {
       var mode = this.get(_MaxMode_);
       var ext;
 
-      if(arguments.length > 1) {
+      if (arguments.length > 1) {
         this[__Max_] = value;
       } else {
         var change = function(val) {
           this.set(_prop_, val);
         }.bind(this);
 
-        if(mode === 'auto') {
+        if (mode === 'auto') {
           change(this.get(_DataExtent_)[1] || 1);
         }
-
-        else if(mode === 'push') {
+        else if (mode === 'push') {
           ext = this.get(_DataExtent_)[1];
-          if(!isNaN(ext) && this[__Max_] < ext) {
+          if (!isNaN(ext) && this[__Max_] < ext) {
             change(ext);
           }
         }
-
-        else if(mode === 'push-tick') {
+        else if (mode === 'push-tick') {
           var extent = this.get(_DataExtent_);
-          ext = extent[1];
+          ext = extent[1] || 1;
 
-          if(!isNaN(ext) && this[__Max_] < ext) {
+          if (!isNaN(ext) && this[__Max_] < ext) {
+            var tickCount = this.get(_Axis_tickCount_) || defaultTickCount;
+            var newDomain = this.get(_ScaleFactory_)().domain(extent).nice(tickCount).domain();
+            change(newDomain[1]);
+          }
+        }
+        else if (mode === 'always-push-tick') {
+          var extent = this.get(_DataExtent_);
+          ext = extent[1] || 1;
+
+          if (!isNaN(ext)) {
             var tickCount = this.get(_Axis_tickCount_) || defaultTickCount;
             var newDomain = this.get(_ScaleFactory_)().domain(extent).nice(tickCount).domain();
             change(newDomain[1]);
@@ -615,7 +627,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
   */
-  xDataExtent: Ember.computed('xData', function(){
+  xDataExtent: Ember.computed('xData', function() {
     var xData = this.get('xData');
     return xData ? d3.extent(xData) : [null, null];
   }),
@@ -626,7 +638,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
   */
-  yDataExtent: Ember.computed('yData', function(){
+  yDataExtent: Ember.computed('yData', function() {
     var yData = this.get('yData');
     return yData ? d3.extent(yData) : [null, null];
   }),
@@ -637,7 +649,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
   */
-  xData: Ember.computed('graphics.@each.xData', function(){
+  xData: Ember.computed('graphics.@each.xData', function() {
     var graphics = this.get('graphics');
     var all = [];
     graphics.forEach(function(graphic) {
@@ -652,7 +664,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
   */
-  yData: Ember.computed('graphics.@each.yData', function(){
+  yData: Ember.computed('graphics.@each.yData', function() {
     var graphics = this.get('graphics');
     var all = [];
     graphics.forEach(function(graphic) {
@@ -668,7 +680,7 @@ export default Ember.Component.extend({
     @readonly
     @private
   */
-  contentClipPathId: Ember.computed('elementId', function(){
+  contentClipPathId: Ember.computed('elementId', function() {
     return this.get('elementId') + '-content-mask';
   }),
 
@@ -679,7 +691,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
    */
-  graphics: Ember.computed(function(){
+  graphics: Ember.computed(function() {
     return Ember.A();
   }),
 
@@ -758,7 +770,7 @@ export default Ember.Component.extend({
     @method registerGraphic
     @param graphic {Ember.Component} The component object to register
    */
-  registerGraphic: function (graphic) {
+  registerGraphic: function(graphic) {
     var graphics = this.get('graphics');
     graphics.pushObject(graphic);
   },
@@ -780,7 +792,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
    */
-  yRange: Ember.computed('graphHeight', function(){
+  yRange: Ember.computed('graphHeight', function() {
     return [this.get('graphHeight'), 0];
   }),
 
@@ -791,7 +803,7 @@ export default Ember.Component.extend({
     @type Array
     @readonly
    */
-  xRange: Ember.computed('graphWidth', function(){
+  xRange: Ember.computed('graphWidth', function() {
     return [0, this.get('graphWidth')];
   }),
 
@@ -815,7 +827,7 @@ export default Ember.Component.extend({
     var paddingLeft = this.get('paddingLeft');
     var yAxisWidth = this.get('yAxis.width') || 0;
     var yAxisOrient = this.get('yAxis.orient');
-    if(yAxisOrient === 'right') {
+    if (yAxisOrient === 'right') {
       return paddingLeft;
     }
     return paddingLeft + yAxisWidth;
@@ -827,10 +839,10 @@ export default Ember.Component.extend({
     @type Number
     @readonly
    */
-  graphY: Ember.computed('paddingTop', 'xAxis.orient', 'xAxis.height', function(){
+  graphY: Ember.computed('paddingTop', 'xAxis.orient', 'xAxis.height', function() {
     var paddingTop = this.get('paddingTop');
     var xAxisOrient = this.get('xAxis.orient');
-    if(xAxisOrient === 'top') {
+    if (xAxisOrient === 'top') {
       var xAxisHeight = this.get('xAxis.height') || 0;
       return xAxisHeight + paddingTop;
     }
@@ -857,7 +869,7 @@ export default Ember.Component.extend({
     @type Number
     @readonly
    */
-  graphHeight: Ember.computed('height', 'paddingTop', 'paddingBottom', 'xAxis.height', function(){
+  graphHeight: Ember.computed('height', 'paddingTop', 'paddingBottom', 'xAxis.height', function() {
     var paddingTop = this.get('paddingTop') || 0;
     var paddingBottom = this.get('paddingBottom') || 0;
     var xAxisHeight = this.get('xAxis.height') || 0;
@@ -871,7 +883,7 @@ export default Ember.Component.extend({
     @type String
     @readonly
    */
-  graphTransform: Ember.computed('graphX', 'graphY', function(){
+  graphTransform: Ember.computed('graphX', 'graphY', function() {
     var graphX = this.get('graphX');
     var graphY = this.get('graphY');
     return `translate(${graphX} ${graphY})`;
@@ -882,7 +894,7 @@ export default Ember.Component.extend({
     @method _notifyHasRendered
     @private
   */
-  _notifyHasRendered: Ember.on('willInsertElement', function () {
+  _notifyHasRendered: Ember.on('willInsertElement', function() {
     this.set('hasRendered', true);
   }),
 
@@ -893,17 +905,17 @@ export default Ember.Component.extend({
     @param e {Object} the DOM mouse event
     @return {Array} an array of `[xMouseCoord, yMouseCoord]`
    */
-  mousePoint: function (container, e) {
+  mousePoint: function(container, e) {
     var svg = container.ownerSVGElement || container;
     if (svg.createSVGPoint) {
       var point = svg.createSVGPoint();
       point.x = e.clientX;
       point.y = e.clientY;
       point = point.matrixTransform(container.getScreenCTM().inverse());
-      return [ point.x, point.y ];
+      return [point.x, point.y];
     }
     var rect = container.getBoundingClientRect();
-    return [ e.clientX - rect.left - container.clientLeft, e.clientY - rect.top - container.clientTop ];
+    return [e.clientX - rect.left - container.clientLeft, e.clientY - rect.top - container.clientTop];
   },
 
   /**
@@ -921,14 +933,14 @@ export default Ember.Component.extend({
     @param graphic {Ember.Component} the graph component to select within the graph.
   */
   selectGraphic: function(graphic) {
-    if(!graphic.get('selected')) {
+    if (!graphic.get('selected')) {
       graphic.set('selected', true);
     }
-    if(this.selectMultiple) {
+    if (this.selectMultiple) {
       this.get('selected').pushObject(graphic);
     } else {
       var current = this.get('selected');
-      if(current && current !== graphic) {
+      if (current && current !== graphic) {
         current.set('selected', false);
       }
       this.set('selected', graphic);
@@ -942,11 +954,11 @@ export default Ember.Component.extend({
   */
   deselectGraphic: function(graphic) {
     graphic.set('selected', false);
-    if(this.selectMultiple) {
+    if (this.selectMultiple) {
       this.get('selected').removeObject(graphic);
     } else {
       var current = this.get('selected');
-      if(current && current === graphic) {
+      if (current && current === graphic) {
         this.set('selected', null);
       }
     }
@@ -957,7 +969,7 @@ export default Ember.Component.extend({
     @method _setup
     @private
   */
-  _setup: Ember.on('init', function(){
+  _setup: Ember.on('init', function() {
     this.set('selected', this.selectMultiple ? Ember.A() : null);
   }),
 
@@ -993,7 +1005,7 @@ export default Ember.Component.extend({
   */
   brushEndAction: null,
 
-  _setupBrushAction: Ember.on('didInsertElement', function(){
+  _setupBrushAction: Ember.on('didInsertElement', function() {
     var content = this.$('.nf-graph-content');
 
     var toBrushEventStreams = this._toBrushEventStreams.bind(this);
@@ -1007,16 +1019,18 @@ export default Ember.Component.extend({
 
     this._brushDisposable = Observable.merge(mouseDowns, mouseMoves, mouseLeaves).
       // get a streams of mouse events that start on mouse down and end on mouse up
-      window(mouseDowns, function() { return mouseUps; })
+    window(mouseDowns, function() {
+        return mouseUps;
+      })
       // filter out all of them if there are no brush actions registered
       // map the mouse event streams into brush event streams
-      .map( toBrushEventStreams ).
+      .map(toBrushEventStreams).
       // flatten to a stream of action names and event objects
-      flatMap( toComponentEventStream ).
+    flatMap(toComponentEventStream).
       // HACK: this is fairly cosmetic, so skip errors.
-      retry().
+    retry().
       // subscribe and send the brush actions via Ember
-      forEach(triggerComponentEvent);
+    forEach(triggerComponentEvent);
   }),
 
   _toBrushEventStreams: function(mouseEvents) {
@@ -1027,13 +1041,13 @@ export default Ember.Component.extend({
     // get the starting mouse event
     return mouseEvents.take(1).
       // calculate it's mouse point and info
-      map( getStartInfo ).
+    map(getStartInfo).
       // combine the start with the each subsequent mouse event
-      combineLatest(mouseEvents.skip(1), toArray).
+    combineLatest(mouseEvents.skip(1), toArray).
       // filter out everything until the brushThreshold is crossed
-      filter( byBrushThreshold ).
+    filter(byBrushThreshold).
       // create the brush event object
-      map( toBrushEvent );
+    map(toBrushEvent);
   },
 
   _triggerComponentEvent: function(d) {
@@ -1053,7 +1067,7 @@ export default Ember.Component.extend({
   },
 
   didBrush: function(e) {
-    if(this.get('brushAction')) {
+    if (this.get('brushAction')) {
       this.sendAction('brushAction', e);
     }
   },
@@ -1062,7 +1076,7 @@ export default Ember.Component.extend({
     document.body.style.setProperty('-webkit-user-select', 'none');
     document.body.style.setProperty('-moz-user-select', 'none');
     document.body.style.setProperty('user-select', 'none');
-    if(this.get('brushStartAction')) {
+    if (this.get('brushStartAction')) {
       this.sendAction('brushStartAction', e);
     }
   },
@@ -1071,14 +1085,14 @@ export default Ember.Component.extend({
     document.body.style.removeProperty('-webkit-user-select');
     document.body.style.removeProperty('-moz-user-select');
     document.body.style.removeProperty('user-select');
-    if(this.get('brushEndAction')) {
+    if (this.get('brushEndAction')) {
       this.sendAction('brushEndAction', e);
     }
   },
 
   _toBrushEvent: function(d) {
     var start = d[0];
-    var currentEvent =  d[1];
+    var currentEvent = d[1];
     var currentPoint = getMousePoint(currentEvent.currentTarget, d[1]);
 
     var startPosition = GraphPosition.create({
@@ -1098,7 +1112,7 @@ export default Ember.Component.extend({
     var left = startPosition;
     var right = currentPosition;
 
-    if(start.originalEvent.clientX > currentEvent.clientX) {
+    if (start.originalEvent.clientX > currentEvent.clientX) {
       left = currentPosition;
       right = startPosition;
     }
@@ -1124,8 +1138,8 @@ export default Ember.Component.extend({
     };
   },
 
-  willDestroyElement: function(){
-    if(this._brushDisposable) {
+  willDestroyElement: function() {
+    if (this._brushDisposable) {
       this._brushDisposable.dispose();
     }
   },
