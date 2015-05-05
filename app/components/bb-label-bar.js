@@ -101,18 +101,22 @@ export default Ember.Component.extend(HasGraphParent, {
   _updateGraphLabelBar: Ember.on('willInsertElement', function(){
     this.set('graph.labelBar', this);
   }),
+
   _getLabelsFromGraphParent: Ember.on('didInsertElement', function(){
     var graphics = this.get('graph.graphics');
     var graphicLabels = graphics.filter(function(graphic){
       return graphic.hasLabel;
     }).map(function(label){
+      var y = Number(Ember.get(label, 'labelY'));
       return {
         x: Ember.get(label, 'labelX'),
-        y: Ember.get(label, 'labelY'),
-        text: Ember.get(label, 'labelText')
+        y: y,
+        text: Ember.get(label, 'labelText'),
+        labelClass: Ember.get(label, 'class'),
+        rectY: (y - 12)
       }
     });
 
-    this.set('labels', graphicsWithLabels);
-  })
+    this.set('labels', graphicLabels);
+  }).observes('graph.graphics.@each')
 });
