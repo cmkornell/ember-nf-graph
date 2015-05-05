@@ -1,0 +1,9 @@
+{{#each labels as |label|}}
+  {{#if template.blockParams}}
+      {{yield label}}
+    {{else}}
+      <g class="label">
+        <text x={{label.x}} y={{label.y}}>{{label.text}}</text>
+      </g>
+  {{/if}}
+{{/each}}

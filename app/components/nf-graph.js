@@ -493,6 +493,15 @@ export default Ember.Component.extend({
   xAxis: null,
 
   /**
+    The `bb-label-bar` component is registered here if there is one present
+    @property labelBar
+    @readonly
+    @default null
+  */
+
+  labelBar: null,
+
+  /**
     Backing field for `xMin`
     @property _xMin
     @private
@@ -855,12 +864,13 @@ export default Ember.Component.extend({
     @type Number
     @readonly
    */
-  graphWidth: Ember.computed('width', 'paddingRight', 'paddingLeft', 'yAxis.width', function() {
+  graphWidth: Ember.computed('width', 'paddingRight', 'paddingLeft', 'yAxis.width', 'labelBar.width', function() {
     var paddingRight = this.get('paddingRight') || 0;
     var paddingLeft = this.get('paddingLeft') || 0;
     var yAxisWidth = this.get('yAxis.width') || 0;
     var width = this.get('width') || 0;
-    return Math.max(0, width - paddingRight - paddingLeft - yAxisWidth);
+    var labelBar = this.get('labelBar.width') || 0;
+    return Math.max(0, width - paddingRight - paddingLeft - yAxisWidth - labelBar);
   }),
 
   /**
