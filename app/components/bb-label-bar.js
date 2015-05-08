@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import HasGraphParent  from 'ember-nf-graph/mixins/graph-has-graph-parent';
+import HasGraphParent from 'ember-nf-graph/mixins/graph-has-graph-parent';
 
 import layout from '../templates/components/bb-label-bar';
 
@@ -34,7 +34,7 @@ export default Ember.Component.extend(HasGraphParent, {
     @type String
     @readonly
   */
-  transform: Ember.computed('x', 'y', function(){
+  transform: Ember.computed('x', 'y', function() {
     var x = this.get('x');
     var y = this.get('y');
     return `translate(${x} ${y})`;
@@ -52,9 +52,9 @@ export default Ember.Component.extend(HasGraphParent, {
     'width',
     'graph.paddingLeft',
     'graph.paddingRight',
-    function(){
+    function() {
       var orient = this.get('orient');
-      if(orient !== 'left') {
+      if (orient !== 'left') {
         return this.get('graph.width') - this.get('width') - this.get('graph.paddingRight');
       }
       return this.get('graph.paddingLeft');
@@ -89,7 +89,7 @@ export default Ember.Component.extend(HasGraphParent, {
     @type Number
     @readonly
   */
-  axisLineX: Ember.computed('isOrientRight', 'width', function(){
+  axisLineX: Ember.computed('isOrientRight', 'width', function() {
     return this.get('isOrientRight') ? 0 : this.get('width');
   }),
 
@@ -98,25 +98,76 @@ export default Ember.Component.extend(HasGraphParent, {
     @method _updateGraphLabelBar
     @private
   */
-  _updateGraphLabelBar: Ember.on('willInsertElement', function(){
+  _updateGraphLabelBar: Ember.on('willInsertElement', function() {
     this.set('graph.labelBar', this);
   }),
 
-  _getLabelsFromGraphParent: Ember.on('didInsertElement', function(){
+  labels: function() {
     var graphics = this.get('graph.graphics');
-    var graphicLabels = graphics.filter(function(graphic){
+    var graphicLabels = graphics.filter(function(graphic) {
       return graphic.hasLabel;
-    }).map(function(label){
+    }).sort(function(a, b) {
+      var y1 = Math.floor(Ember.get(a, 'labelY'));
+      var y2 = Math.floor(Ember.get(b, 'labelY'));
+      return y1 - y2;
+    }).map(function(label) {
       var y = Number(Ember.get(label, 'labelY'));
+      var labelText = Ember.get(label, 'labelText');
       return {
-        x: Ember.get(label, 'labelX'),
+        x: 5, // should be configurable for padding
         y: y,
-        text: Ember.get(label, 'labelText'),
+        text: labelText,
         labelClass: Ember.get(label, 'class'),
-        rectY: (y - 12)
+        evalClass: 'label ' + labelText.replace(' ', ''),
+        evalSelector: '.label.' + labelText.replace(' ', ''),
+        background: null
       }
     });
 
-    this.set('labels', graphicLabels);
-  }).observes('graph.graphics.@each')
+    Ember.run.scheduleOnce('afterRender', this, function() {
+      this._addBackgroundForLabels();
+    }.bind(this));
+
+    return graphicLabels;
+  }.property('graph.graphics.@each'),
+
+  _addBackgroundForLabels: function() {
+    var self = this;
+    var labels = self.get('labels');
+    var lastValue = null;
+
+    var labelsWithBackgrounds = labels.map(function(label, index, array) {
+      var width = $(label.evalSelector).outerWidth() + 10 //config;
+      var height = $(label.evalSelector).outerHeight() + 10 //config;
+      var y = Ember.get(label, 'y');
+
+      if (array[index - 1]) {
+        var y1 = y;
+        var y2 = Ember.get(array[index - 1], 'y');
+        var yDistance = Math.round(y1 - (lastValue || y2));
+        var shouldAdjust = yDistance < 0 || yDistance <= height;
+        if(shouldAdjust) {
+          y = (lastValue || y2) + height //5 pixels of padding;
+          lastValue = y;
+        }
+      }
+
+      return {
+        x: label.x, // should be configurable for padding
+        y: y,
+        text: label.text,
+        labelClass: label.labelClass,
+        evalClass: label.evalClass,
+        evalSelector: label.evalSelector,
+        background: {
+          x: 5,
+          y: y - (height / 2),
+          width: width,
+          height: height
+        }
+      }
+    });
+
+    self.set('labels', labelsWithBackgrounds);
+  }
 });

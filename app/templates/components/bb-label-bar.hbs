@@ -2,7 +2,13 @@
   {{#if template.blockParams}}
       {{yield label}}
     {{else}}
-      <rect x=0 y={{label.rectY}} width="40" height="20" rx="5"/>
-      <text x=10 y={{label.y}}>{{label.text}}</text>
+      {{#if label.background}}
+        <rect x={{label.background.x}}
+              y={{label.background.y}}
+              width={{label.background.width}}
+              height={{label.background.height}}
+        rx="2"/>
+      {{/if}}
+      <text x=10 y={{label.y}} class="{{label.evalClass}} {{label.labelClass}}">{{label.text}}</text>
   {{/if}}
 {{/each}}
